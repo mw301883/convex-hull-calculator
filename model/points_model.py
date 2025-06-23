@@ -3,7 +3,11 @@ class PointsModel:
         self.points = []
 
     def add_point(self, x, y):
-        self.points.append((round(x, 2), round(y, 2)))
+        self.points.append((x, y))
 
     def get_points(self):
         return self.points
+
+    def remove_point(self, index):
+        if 0 <= index < len(self.points):
+            self.points.pop(index)
