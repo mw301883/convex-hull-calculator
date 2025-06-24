@@ -1,4 +1,4 @@
-from tkinter import Label, Button, Frame, Canvas, Scrollbar, BOTH, X, LEFT, RIGHT, Y, VERTICAL
+from tkinter import Label, Button, Frame, Canvas, Scrollbar, BOTH, X, LEFT, RIGHT, Y, VERTICAL, Entry
 from tkinter import messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from plot.plot_canvas import PlotCanvas
@@ -60,6 +60,20 @@ class MainWindow:
         btn_container = Frame(left_panel, bg="#f8f8f8")
         btn_container.grid(row=2, column=0, pady=10, sticky="ew")
 
+        entry_frame = Frame(left_panel, bg="#f8f8f8")
+        entry_frame.grid(row=3, column=0, sticky="ew", pady=(10, 0))
+
+        Label(entry_frame, text="X:", bg="#f8f8f8", font=("Arial", 10)).pack(side=LEFT, padx=(0,5))
+        self.entry_x = Entry(entry_frame, width=7)
+        self.entry_x.pack(side=LEFT, padx=(0, 10))
+
+        Label(entry_frame, text="Y:", bg="#f8f8f8", font=("Arial", 10)).pack(side=LEFT, padx=(0,5))
+        self.entry_y = Entry(entry_frame, width=7)
+        self.entry_y.pack(side=LEFT, padx=(0, 10))
+
+        btn_add_point = Button(entry_frame, text="Dodaj punkt", command=self.add_point_from_entry,
+                               bg="#1abc9c", fg="white", relief="flat", font=("Arial", 10), padx=10, pady=2)
+        btn_add_point.pack(side=LEFT)
 
         Button(btn_container, text="Wyczyść", command=self.clear_all_points,
                bg="#3498db", fg="white", relief="flat", font=("Arial", 10), padx=10, pady=4).pack(side=LEFT, padx=5)
@@ -141,6 +155,29 @@ class MainWindow:
             self.model.add_point(x, y)
         self.plot.draw_points()
         self.update_point_list()
+
+    def add_point_from_entry(self):
+        try:
+            x = float(self.entry_x.get())
+            y = float(self.entry_y.get())
+        except ValueError:
+            messagebox.showerror("Błąd", "Wprowadź poprawne liczby dla X i Y.")
+            return
+
+        if not (0 <= x <= 100 and 0 <= y <= 100):
+            messagebox.showwarning("Zakres wartości", "Współrzędne X i Y muszą być w zakresie od 0 do 100.")
+            return
+
+        if len(self.model.get_points()) >= self.MAX_POINTS:
+            messagebox.showwarning("Limit punktów", f"Można dodać maksymalnie {self.MAX_POINTS} punktów.")
+            return
+
+        self.model.add_point(x, y)
+        self.plot.draw_points()
+        self.update_point_list()
+
+        self.entry_x.delete(0, 'end')
+        self.entry_y.delete(0, 'end')
 
     def compute_convex_hull(self):
         if not self.model.get_points():
