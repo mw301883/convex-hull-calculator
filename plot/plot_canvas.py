@@ -46,3 +46,12 @@ class PlotCanvas:
     def remove_highlight(self):
         self.highlighted_index = None
         self.draw_points()
+
+    def draw_hull(self, hull_points):
+        self.draw_points()
+        if len(hull_points) < 2:
+            return
+        xs, ys = zip(*(hull_points + [hull_points[0]]))  # zamknięcie otoczki
+        self.ax.plot(xs, ys, color='red', linewidth=2)
+        self.figure.canvas.draw()
+

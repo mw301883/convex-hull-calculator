@@ -1,10 +1,14 @@
-from tkinter import Label, Button, Frame, Canvas, Scrollbar, BOTH, X, LEFT, RIGHT, Y, VERTICAL, Entry
-from tkinter import messagebox
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from plot.plot_canvas import PlotCanvas
-from model.points_model import PointsModel
-import sys
 import random
+import sys
+from tkinter import Entry
+from tkinter import Label, Button, Frame, Canvas, Scrollbar, X, LEFT, RIGHT, VERTICAL
+from tkinter import messagebox, Listbox
+
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+from model.points_model import PointsModel
+from plot.plot_canvas import PlotCanvas
+
 
 class MainWindow:
     MAX_POINTS = 30
@@ -85,6 +89,23 @@ class MainWindow:
         Button(btn_container, text="Losuj punkty", command=self.randomize_points,
                bg="#f39c12", fg="white", relief="flat", font=("Arial", 10), padx=10, pady=4).pack(side=LEFT, padx=5)
 
+        # po utworzeniu left_panel:
+        points_frame = Frame(left_panel, bg="#f8f8f8")
+        points_frame.grid(row=3, column=0, sticky="nsew", pady=(10, 0))
+
+        # Wiersz z otoczką i typem figury
+        hull_row = Frame(points_frame, bg="#f8f8f8")
+        Label(points_frame, text="Punkty otoczki:", font=("Arial", 11, "bold"), bg="#f8f8f8", anchor="w").grid(row=0, column=0, sticky="w", pady=(0,5))
+        hull_row.grid(row=1, column=0, sticky="nsew")
+
+        self.hull_points_listbox = Listbox(hull_row, font=("Arial", 11), width=30, height=30, fg="red")
+        self.hull_points_listbox.pack(side=LEFT)
+
+        self.hull_type_label = Label(hull_row, text="Typ figury: brak", font=("Arial", 11, "bold"), bg="#f8f8f8",
+                                     anchor="e", justify="right")
+        self.hull_type_label.pack(side=RIGHT, padx=10)
+
+
         self.hull_computed = False
 
         self.model = PointsModel()
@@ -148,7 +169,7 @@ class MainWindow:
 
     def randomize_points(self):
         self.model.clear()
-        num_points = random.randint(5, self.MAX_POINTS)
+        num_points = random.randint(1, self.MAX_POINTS)
         for _ in range(num_points):
             x = random.uniform(0, 100)
             y = random.uniform(0, 100)
@@ -180,16 +201,23 @@ class MainWindow:
         self.entry_y.delete(0, 'end')
 
     def compute_convex_hull(self):
-        if not self.model.get_points():
-            messagebox.showwarning("Brak punktów", "Dodaj punkty, aby obliczyć otoczkę.")
+        hull, shape_type = self.model.gift_wrapping()
+        if not hull:
             return
 
-        self.hull_computed = True
+        # Zaokrąglenie
+        rounded_hull = [(round(x, 2), round(y, 2)) for x, y in hull]
+        rounded_all = [(round(x, 2), round(y, 2)) for x, y in self.model.get_points()]
 
-        messagebox.showinfo("Otoczka wypukła", "Otoczka wypukła została obliczona!")
+        # Wypełnienie prawego listboxa punktami otoczki
+        self.hull_points_listbox.delete(0, 'end')
+        for pt in rounded_hull:
+            self.hull_points_listbox.insert('end', f"({pt[0]}, {pt[1]})")
 
-        self.btn_convex_hull.config(text="Usuń otoczkę", command=self.remove_convex_hull,
-                                    bg="#e67e22")
+        # Rysowanie otoczki
+        self.plot.draw_hull(rounded_hull)
+
+        self.hull_type_label.config(text=f"Typ figury: {shape_type}")
 
     def remove_convex_hull(self):
         self.hull_computed = False
