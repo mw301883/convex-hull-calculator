@@ -40,7 +40,8 @@ class MainWindow:
         left_panel.grid_rowconfigure(1, weight=1)
         left_panel.grid_rowconfigure(2, weight=0)
 
-        left_panel.grid_columnconfigure(0, weight=1)
+        left_panel.grid_rowconfigure(3, weight=0)
+        left_panel.grid_rowconfigure(4, weight=1)
 
         Label(left_panel, text="Lista punktów:", bg="#f8f8f8", font=("Arial", 12, "bold")).grid(row=0, column=0, sticky="w", pady=(0,5))
 
@@ -67,6 +68,9 @@ class MainWindow:
         entry_frame = Frame(left_panel, bg="#f8f8f8")
         entry_frame.grid(row=3, column=0, sticky="ew", pady=(10, 0))
 
+        points_frame = Frame(left_panel, bg="#f8f8f8")
+        points_frame.grid(row=4, column=0, sticky="nsew", pady=(10, 0))
+
         Label(entry_frame, text="X:", bg="#f8f8f8", font=("Arial", 10)).pack(side=LEFT, padx=(0,5))
         self.entry_x = Entry(entry_frame, width=7)
         self.entry_x.pack(side=LEFT, padx=(0, 10))
@@ -89,17 +93,13 @@ class MainWindow:
         Button(btn_container, text="Losuj punkty", command=self.randomize_points,
                bg="#f39c12", fg="white", relief="flat", font=("Arial", 10), padx=10, pady=4).pack(side=LEFT, padx=5)
 
-        # po utworzeniu left_panel:
-        points_frame = Frame(left_panel, bg="#f8f8f8")
-        points_frame.grid(row=3, column=0, sticky="nsew", pady=(10, 0))
-
-        # Wiersz z otoczką i typem figury
         hull_row = Frame(points_frame, bg="#f8f8f8")
         Label(points_frame, text="Punkty otoczki:", font=("Arial", 11, "bold"), bg="#f8f8f8", anchor="w").grid(row=0, column=0, sticky="w", pady=(0,5))
         hull_row.grid(row=1, column=0, sticky="nsew")
 
         self.hull_points_listbox = Listbox(hull_row, font=("Arial", 11), width=30, height=30, fg="red")
         self.hull_points_listbox.pack(side=LEFT)
+        self.hull_points_listbox.bind("<<ListboxSelect>>", self.on_hull_point_select)
 
         self.hull_type_label = Label(hull_row, text="Typ figury: brak", font=("Arial", 11, "bold"), bg="#f8f8f8",
                                      anchor="e", justify="right")
@@ -167,6 +167,12 @@ class MainWindow:
         self.plot.draw_points()
         self.update_point_list()
 
+        self.hull_points_listbox.delete(0, 'end')
+        self.hull_type_label.config(text="Typ figury: brak")
+
+        if hasattr(self.model, "last_hull"):
+            self.model.last_hull = []
+
     def randomize_points(self):
         self.model.clear()
         num_points = random.randint(1, self.MAX_POINTS)
@@ -205,23 +211,30 @@ class MainWindow:
         if not hull:
             return
 
-        # Zaokrąglenie
         rounded_hull = [(round(x, 2), round(y, 2)) for x, y in hull]
         rounded_all = [(round(x, 2), round(y, 2)) for x, y in self.model.get_points()]
 
-        # Wypełnienie prawego listboxa punktami otoczki
         self.hull_points_listbox.delete(0, 'end')
         for pt in rounded_hull:
             self.hull_points_listbox.insert('end', f"({pt[0]}, {pt[1]})")
 
-        # Rysowanie otoczki
         self.plot.draw_hull(rounded_hull)
 
         self.hull_type_label.config(text=f"Typ figury: {shape_type}")
 
-    def remove_convex_hull(self):
-        self.hull_computed = False
+    def on_hull_point_select(self, event):
+        selection = event.widget.curselection()
+        if not selection:
+            return
 
-        self.btn_convex_hull.config(text="Oblicz otoczkę", command=self.compute_convex_hull,
-                                    bg="#2ecc71")
-        self.plot.draw_points()
+        index = selection[0]
+        selected_text = event.widget.get(index)
+
+        try:
+            x_str, y_str = selected_text.strip("()").split(", ")
+            x = float(x_str)
+            y = float(y_str)
+        except ValueError:
+            return
+
+        self.plot.highlight_specific_point((x, y), color="red")

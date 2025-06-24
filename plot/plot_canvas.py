@@ -43,6 +43,18 @@ class PlotCanvas:
         self.highlighted_index = index
         self.draw_points()
 
+    def highlight_specific_point(self, point, color="yellow"):
+        self.draw_points()
+
+        if hasattr(self.model, 'last_hull') and self.model.last_hull:
+            hull = self.model.last_hull
+            if len(hull) >= 2:
+                xs, ys = zip(*(hull + [hull[0]]))
+                self.ax.plot(xs, ys, color='red', linewidth=2)
+
+        self.ax.plot(point[0], point[1], 'o', color=color, markersize=10)
+        self.figure.canvas.draw()
+
     def remove_highlight(self):
         self.highlighted_index = None
         self.draw_points()
@@ -51,7 +63,7 @@ class PlotCanvas:
         self.draw_points()
         if len(hull_points) < 2:
             return
-        xs, ys = zip(*(hull_points + [hull_points[0]]))  # zamknięcie otoczki
+        xs, ys = zip(*(hull_points + [hull_points[0]]))
         self.ax.plot(xs, ys, color='red', linewidth=2)
         self.figure.canvas.draw()
 
