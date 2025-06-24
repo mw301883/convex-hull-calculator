@@ -11,3 +11,6 @@ class PointsModel:
     def remove_point(self, index):
         if 0 <= index < len(self.points):
             self.points.pop(index)
+
+    def clear(self):
+        self.points.clear()
