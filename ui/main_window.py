@@ -1,6 +1,7 @@
+import os
 import random
 import sys
-from tkinter import Entry
+from tkinter import Entry, PhotoImage
 from tkinter import Label, Button, Frame, Canvas, Scrollbar, X, LEFT, RIGHT, VERTICAL
 from tkinter import messagebox, Listbox
 
@@ -19,6 +20,11 @@ class MainWindow:
         self.root.attributes("-fullscreen", True)
         self.root.configure(bg="#f8f8f8")
         self.root.bind("<Escape>", lambda e: self.root.attributes("-fullscreen", False))
+
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        icon_path = os.path.join(BASE_DIR, '..', 'static', 'icon.png')
+        icon = PhotoImage(file=icon_path)
+        root.iconphoto(True, icon)
 
         top_bar = Frame(self.root, bg="#f8f8f8")
         top_bar.grid(row=0, column=0, columnspan=2, sticky="nsew", padx=10, pady=5)
