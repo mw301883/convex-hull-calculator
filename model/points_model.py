@@ -28,6 +28,9 @@ class PointsModel:
                 return 0  # współliniowe
             return 1 if val > 0 else 2  # zgodnie lub przeciwnie do ruchu wskazówek zegara
 
+        def distance_sq(p, q):
+            return (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2
+
         points = list(set(self.points))  # usunięcie duplikatów
         n = len(points)
 
@@ -52,8 +55,14 @@ class PointsModel:
 
             # Sprawdzenie wszystkich punktów, czy któryś z nich leży bardziej "na lewo"
             for i in range(n):
-                if orientation(points[p], points[i], points[q]) == 2:  # skręt w lewo
+                orient = orientation(points[p], points[i], points[q])
+                if orient == 2:  # skręt w lewo
                     q = i  # znaleziono lepszy punkt
+                elif orient == 0:
+                    # jeśli punkty współliniowe, wybierz punkt najdalej od p
+                    if distance_sq(points[p], points[i]) > distance_sq(points[p], points[q]):
+                        q = i  # wybieramy punkt najbardziej oddalony, żeby uniknąć punktów na prostej
+
             p = q  # przechodzimy do następnego punktu
             if p == l:  # jeśli wróciliśmy do punktu początkowego, kończymy
                 break
@@ -70,3 +79,4 @@ class PointsModel:
             return hull, "czworokąt"
         else:
             return hull, f"{len(hull)}-kąt"
+
